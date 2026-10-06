@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "publisher": "Astral python-build-standalone",
+  "release": "20260924",
+  "platforms": {
+    "windows-x86_64": {
+      "version": "3.13.15",
+      "filename": "cpython-3.13.15+20260924-x86_64-pc-windows-msvc-install_only_stripped.tar.gz",
+      "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20260924/cpython-3.13.15%2B20260924-x86_64-pc-windows-msvc-install_only_stripped.tar.gz",
+      "sha256": "e42fa944748a50e9ff481cbb817ef8a6e3da6fbcf0cf6f29b554e1acb8c7384d"
+    },
+    "windows-arm64": {
+      "version": "3.13.15",
+      "filename": "cpython-3.13.15+20260924-aarch64-pc-windows-msvc-install_only_stripped.tar.gz",
+      "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20260924/cpython-3.13.15%2B20260924-aarch64-pc-windows-msvc-install_only_stripped.tar.gz",
+      "sha256": "68c7c544a0ac705f58ea922c3e1be0af0a9f9508be1159d7e355b2466689a1dd"
+    },
+    "macos-arm64": {
+      "version": "3.13.15",
+      "filename": "cpython-3.13.15+20260924-aarch64-apple-darwin-install_only_stripped.tar.gz",
+      "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20260924/cpython-3.13.15%2B20260924-aarch64-apple-darwin-install_only_stripped.tar.gz",
+      "sha256": "064afb7c2fc0bbf511d886288adf98696af5105e36c138cdf2c199c0146fcf68"
+    },
+    "linux-x86_64": {
+      "version": "3.13.15",
+      "filename": "cpython-3.13.15+20260924-x86_64-unknown-linux-gnu-install_only_stripped.tar.gz",
+      "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20260924/cpython-3.13.15%2B20260924-x86_64-unknown-linux-gnu-install_only_stripped.tar.gz",
+      "sha256": "d0b640eed27fbdd6f5f2bd33444aee53df2c8863f8b2a96f4094717411e3de9c"
+    },
+    "linux-arm64": {
+      "version": "3.13.15",
+      "filename": "cpython-3.13.15+20260924-aarch64-unknown-linux-gnu-install_only_stripped.tar.gz",
+      "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20260924/cpython-3.13.15%2B20260924-aarch64-unknown-linux-gnu-install_only_stripped.tar.gz",
+      "sha256": "5ad58156cbec94e5643c13caa792e92df72a23f33d3a6425d4cbff5c4b7a040c"
+    }
+  }
+}

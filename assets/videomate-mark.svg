@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">VideoMate</title>
+  <desc id="desc">A broken film frame reconnects around a play symbol, surrounded by a sweeping recovery arrow.</desc>
+  <defs>
+    <linearGradient id="film" x1="195" y1="300" x2="855" y2="700" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#07245c"/>
+      <stop offset="0.42" stop-color="#063d78"/>
+      <stop offset="0.73" stop-color="#075d8d"/>
+      <stop offset="1" stop-color="#00bec9"/>
+    </linearGradient>
+    <linearGradient id="play" x1="370" y1="625" x2="660" y2="390" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#064773"/>
+      <stop offset="0.56" stop-color="#00a6bd"/>
+      <stop offset="1" stop-color="#28efdf"/>
+    </linearGradient>
+    <linearGradient id="orbit" x1="97" y1="780" x2="950" y2="586" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#064875"/>
+      <stop offset="0.38" stop-color="#047eb0"/>
+      <stop offset="0.67" stop-color="#02d0cf"/>
+      <stop offset="0.86" stop-color="#f8ce3e"/>
+      <stop offset="1" stop-color="#ffae2c"/>
+    </linearGradient>
+    <linearGradient id="amber" x1="465" y1="250" x2="565" y2="330" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffdf62"/>
+      <stop offset="0.45" stop-color="#ffb328"/>
+      <stop offset="1" stop-color="#ea761f"/>
+    </linearGradient>
+    <linearGradient id="highlight" x1="240" y1="245" x2="790" y2="272" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.08"/>
+      <stop offset="0.7" stop-color="#ffffff" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="lift" x="-25%" y="-25%" width="150%" height="160%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="12" result="blur"/>
+      <feOffset in="blur" dy="11" result="offset"/>
+      <feComponentTransfer in="offset" result="shadow"><feFuncA type="linear" slope="0.24"/></feComponentTransfer>
+      <feMerge><feMergeNode in="shadow"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <mask id="sprockets" maskUnits="userSpaceOnUse" x="100" y="130" width="850" height="790">
+      <rect x="100" y="130" width="850" height="790" fill="white"/>
+      <g fill="black">
+        <rect x="134" y="337" width="54" height="64" rx="13"/>
+        <rect x="134" y="457" width="54" height="64" rx="13"/>
+        <rect x="134" y="577" width="54" height="64" rx="13"/>
+        <rect x="134" y="697" width="54" height="64" rx="13"/>
+        <rect x="836" y="337" width="54" height="64" rx="13"/>
+        <rect x="836" y="457" width="54" height="64" rx="13"/>
+        <rect x="836" y="577" width="54" height="64" rx="13"/>
+        <rect x="836" y="697" width="54" height="64" rx="13"/>
+      </g>
+    </mask>
+  </defs>
+  <g filter="url(#lift)">
+    <path d="M566 247h193c57 0 103 46 103 103v389c0 57-46 103-103 103H264c-57 0-103-46-103-103V350c0-57 46-103 103-103h166"
+          fill="none" stroke="url(#film)" stroke-width="105" stroke-linecap="round" stroke-linejoin="round" mask="url(#sprockets)"/>
+    <path d="M570 196h192c72 0 131 59 131 131" fill="none" stroke="url(#highlight)" stroke-width="7" stroke-linecap="round" opacity="0.72"/>
+    <path d="M416 143l43 67-43 34-47-54z" fill="#082b65"/>
+    <path d="M487 116l62 31-26 76-35-29z" fill="#06265e"/>
+    <path d="M480 248l41 31-37 38 41 26-24 33-79-61z" fill="#10346b"/>
+    <path d="M518 241l-48 37 44 40-39 32 23 21 80-60-40-32 28-25z" fill="url(#amber)"/>
+    <path d="M391 381c0-22 25-35 44-23l228 143c19 12 19 39 0 51L435 695c-19 12-44-1-44-23z" fill="url(#play)"/>
+    <path d="M395 383l224 139" fill="none" stroke="#9efff1" stroke-opacity="0.28" stroke-width="9" stroke-linecap="round"/>
+  </g>
+  <g filter="url(#lift)">
+    <path d="M153 614C43 721 116 853 326 875c235 25 509-48 630-191" fill="none" stroke="#053d6d" stroke-opacity="0.56" stroke-width="80" stroke-linecap="round"/>
+    <path d="M145 620C48 717 125 828 330 848c228 22 491-48 614-183" fill="none" stroke="url(#orbit)" stroke-width="61" stroke-linecap="round"/>
+    <path d="M909 576l73 67-119 30 30-43z" fill="#ffce35"/>
+    <path d="M357 855c244 12 469-63 590-189" fill="none" stroke="#d5fff3" stroke-opacity="0.27" stroke-width="8" stroke-linecap="round"/>
+  </g>
+</svg>

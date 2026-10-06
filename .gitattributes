@@ -1,0 +1,12 @@
+* text=auto eol=lf
+*.sh text eol=lf
+*.command text eol=lf
+*.bat text eol=crlf
+*.py text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.ps1 text eol=crlf
+*.tsv text eol=lf
+*.toml text eol=lf
+.githooks/* text eol=lf

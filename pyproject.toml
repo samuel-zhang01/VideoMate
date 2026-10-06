@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "videomate"
+version = "0.8.4"
+description = "Offline video inspection, verified recovery and private diagnostics"
+requires-python = ">=3.11"
+dependencies = []
+readme = "README.md"
+license = {file = "LICENSE"}
+authors = [{name = "samuel-zhang01"}]
+
+[project.urls]
+Repository = "https://github.com/samuel-zhang01/VideoMate"
+
+[project.scripts]
+videomate = "videomate.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+videomate = ["export-schema.json"]

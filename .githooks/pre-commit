@@ -1,0 +1,29 @@
+#!/bin/sh
+# Uses installed Python only. A commit must never trigger a dependency download.
+if [ -n "${VIDEOMATE_PYTHON:-}" ]; then
+    exec "$VIDEOMATE_PYTHON" -I tools/audit_public_release.py
+fi
+for python in python3 python; do
+    if command -v "$python" >/dev/null 2>&1 && "$python" -I -c 'import sys;sys.exit(sys.version_info < (3,11))' 2>/dev/null; then
+        exec "$python" -I tools/audit_public_release.py
+    fi
+done
+case "$(uname -s)-$(uname -m)" in
+    Darwin-arm64) tag=macos-arm64 ;;
+    Linux-x86_64) tag=linux-x86_64 ;;
+    Linux-aarch64|Linux-arm64) tag=linux-arm64 ;;
+    MINGW*|MSYS*|CYGWIN*) tag=windows-x86_64 ;;
+    *) tag=unsupported ;;
+esac
+relative="$tag/python/bin/python3"
+if [ "$tag" = windows-x86_64 ]; then relative="$tag/python/python.exe"; fi
+for parent in "${VIDEOMATE_RUNTIME_ROOT:-dependencies/python}" "${XDG_CACHE_HOME:-$HOME/.cache}/videomate-software/python"; do
+    if [ -x "$parent/$relative" ]; then
+        exec "$parent/$relative" -I tools/audit_public_release.py
+    fi
+done
+if command -v py >/dev/null 2>&1; then
+    exec py -3 -I tools/audit_public_release.py
+fi
+printf '%s\n' 'Repository check needs Python 3.11+. Set VIDEOMATE_PYTHON to your local runtime.' >&2
+exit 1

@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "windows-x86_64": {
+    "version": "9.0.2",
+    "url": "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip",
+    "sha256": "60f467265b1e312373dbcd92200c2618a74850f98d3d078e94296bb3fa2047ba",
+    "publisher": "Gyan Doshi (linked by ffmpeg.org/download.html)",
+    "license": "GPL-3.0-or-later; retain the distribution license and source information"
+  },
+  "windows-arm64": {
+    "version": "9.0.2",
+    "url": "https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-09-27-13-04/ffmpeg-n9.0.2-12-gc867e13549-winarm64-gpl-9.0.zip",
+    "sha256": "f68ce0d3a11674725fd2e23f6b5fa1eb876cf49a318f4e74c5d785360d264495",
+    "publisher": "BtbN FFmpeg GPL static build, autobuild-2026-09-27-13-04",
+    "source_url": "https://github.com/BtbN/FFmpeg-Builds",
+    "license": "GPL; retain bundled LICENSE.txt and corresponding-source information"
+  },
+  "macos-arm64": {
+    "version": "9.0.2",
+    "publisher": "Martin Riedl static release build",
+    "assets": [
+      {
+        "name": "ffmpeg",
+        "url": "https://ffmpeg.martin-riedl.de/download/macos/arm64/1789931890_9.0.2/ffmpeg.zip",
+        "sha256": "c8ed4c4e6978a03c485edbfe4e0a5dc2380f8a30bba5150531b31b094492d924"
+      },
+      {
+        "name": "ffprobe",
+        "url": "https://ffmpeg.martin-riedl.de/download/macos/arm64/1789931890_9.0.2/ffprobe.zip",
+        "sha256": "fcbe839537485eaee7a7a8bc5cbc0f90d53617e80943e8a5b2e31cb851197ea6"
+      }
+    ],
+    "license": "GPL-3.0-or-later; retain dependency licenses and upstream source information",
+    "source_url": "https://git.martin-riedl.de/ffmpeg/build-script"
+  },
+  "linux-x86_64": {
+    "version": "9.0.2",
+    "publisher": "Martin Riedl static release build",
+    "assets": [
+      {
+        "name": "ffmpeg",
+        "url": "https://ffmpeg.martin-riedl.de/download/linux/amd64/1789931100_9.0.2/ffmpeg.zip",
+        "sha256": "fa8ecf4abbd290d98f7d188b8649cc6b391ae209a98452be955a15aab1909d7f"
+      },
+      {
+        "name": "ffprobe",
+        "url": "https://ffmpeg.martin-riedl.de/download/linux/amd64/1789931100_9.0.2/ffprobe.zip",
+        "sha256": "3f428c49070be3d24ec338602b76d412e401ffcb8a5641ef0e729181a232fc32"
+      }
+    ],
+    "license": "GPL-3.0-or-later; retain dependency licenses and upstream source information",
+    "source_url": "https://git.martin-riedl.de/ffmpeg/build-script"
+  },
+  "linux-arm64": {
+    "version": "9.0.2",
+    "publisher": "Martin Riedl static release build",
+    "assets": [
+      {
+        "name": "ffmpeg",
+        "url": "https://ffmpeg.martin-riedl.de/download/linux/arm64/1789931697_9.0.2/ffmpeg.zip",
+        "sha256": "93a76ae90db5474eecdf951a729857c64f3de23567228d6a7d5e6e8e3cd1021b"
+      },
+      {
+        "name": "ffprobe",
+        "url": "https://ffmpeg.martin-riedl.de/download/linux/arm64/1789931697_9.0.2/ffprobe.zip",
+        "sha256": "bcbe80fb741c180083327afaf5434812e006b33cacde2016b9aeaf6936128330"
+      }
+    ],
+    "license": "GPL-3.0-or-later; retain dependency licenses and upstream source information",
+    "source_url": "https://git.martin-riedl.de/ffmpeg/build-script"
+  }
+}

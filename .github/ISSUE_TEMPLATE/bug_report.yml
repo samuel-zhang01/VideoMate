@@ -1,0 +1,18 @@
+name: Bug report
+description: Report a reproducible problem using generated media only.
+body:
+  - type: markdown
+    attributes:
+      value: Never attach operator media, filenames, raw logs, settings, keys or private screenshots. Use generated fixtures. Security issues require a private channel agreed with the maintainer.
+  - type: textarea
+    attributes:
+      label: Version and platform
+      description: VideoMate version, OS, architecture and display scale if relevant.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Reproduction with generated inputs
+      description: Steps, expected behavior, actual behavior and fixed error category. No private paths.
+    validations:
+      required: true

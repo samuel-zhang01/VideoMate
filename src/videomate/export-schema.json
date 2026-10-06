@@ -1,0 +1,1428 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "VideoMate detailed diagnostic export v1 (draft design)",
+  "description": "Closed export contract. Validate locally with a bundled schema; never fetch remote schemas at runtime. Contains no raw logs or source identity. Semantic validation is also required.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "data_origin",
+    "export_profile",
+    "export_scope",
+    "job_ref",
+    "environment",
+    "files",
+    "files_omitted"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "data_origin": {
+      "enum": [
+        "operator_export",
+        "synthetic_example"
+      ]
+    },
+    "export_profile": {
+      "const": "detailed"
+    },
+    "export_scope": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$",
+      "minLength": 32,
+      "maxLength": 32
+    },
+    "job_ref": {
+      "type": "string",
+      "pattern": "^j_[a-f0-9]{64}$",
+      "minLength": 66,
+      "maxLength": 66
+    },
+    "environment": {
+      "$ref": "#/$defs/environment"
+    },
+    "files": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 1000,
+      "items": {
+        "$ref": "#/$defs/file"
+      }
+    },
+    "files_omitted": {
+      "$ref": "#/$defs/count"
+    },
+    "migration_summary": {
+      "$ref": "#/$defs/migration_summary"
+    }
+  },
+  "$defs": {
+    "count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1000000000
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]{1,4}\\.[0-9]{1,4}(\\.[0-9]{1,4})?(?![\\s\\S])",
+      "maxLength": 14
+    },
+    "time": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "duration": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "interval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start_us",
+        "end_us"
+      ],
+      "properties": {
+        "start_us": {
+          "$ref": "#/$defs/time"
+        },
+        "end_us": {
+          "$ref": "#/$defs/time"
+        }
+      }
+    },
+    "optional_interval": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/interval"
+        }
+      ]
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "app_version",
+        "ffmpeg_version",
+        "ffprobe_version",
+        "os",
+        "architecture"
+      ],
+      "properties": {
+        "app_version": {
+          "$ref": "#/$defs/version"
+        },
+        "ffmpeg_version": {
+          "$ref": "#/$defs/version"
+        },
+        "ffprobe_version": {
+          "$ref": "#/$defs/version"
+        },
+        "os": {
+          "enum": [
+            "windows",
+            "macos",
+            "linux"
+          ]
+        },
+        "architecture": {
+          "enum": [
+            "x86_64",
+            "arm64",
+            "other"
+          ]
+        }
+      }
+    },
+    "stream": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "kind",
+        "codec",
+        "coverage",
+        "decode_status"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4095
+        },
+        "kind": {
+          "enum": [
+            "video",
+            "audio",
+            "subtitle",
+            "data",
+            "attachment",
+            "unknown"
+          ]
+        },
+        "codec": {
+          "enum": [
+            "h264",
+            "hevc",
+            "av1",
+            "vp8",
+            "vp9",
+            "mpeg1video",
+            "mpeg2video",
+            "mpeg4",
+            "msmpeg4v3",
+            "wmv1",
+            "wmv2",
+            "wmv3",
+            "vc1",
+            "flv1",
+            "vp6",
+            "vp6f",
+            "theora",
+            "mjpeg",
+            "ffv1",
+            "dvvideo",
+            "prores",
+            "aac",
+            "mp2",
+            "mp3",
+            "opus",
+            "vorbis",
+            "pcm",
+            "flac",
+            "ac3",
+            "eac3",
+            "dts",
+            "wmav1",
+            "wmav2",
+            "other",
+            "unknown"
+          ]
+        },
+        "coverage": {
+          "enum": [
+            "not_checked",
+            "partial",
+            "full",
+            "unsupported",
+            "blocked"
+          ]
+        },
+        "decode_status": {
+          "enum": [
+            "not_run",
+            "no_errors_detected",
+            "errors_detected",
+            "failed",
+            "unsupported"
+          ]
+        },
+        "profile": {
+          "enum": [
+            "baseline",
+            "main",
+            "high",
+            "main10",
+            "other",
+            "unknown"
+          ]
+        },
+        "pixel_format": {
+          "enum": [
+            "yuv420p",
+            "yuv422p",
+            "yuv444p",
+            "yuv420p10le",
+            "yuv422p10le",
+            "yuv444p10le",
+            "rgb24",
+            "gray",
+            "other",
+            "unknown"
+          ]
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        },
+        "bit_depth": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
+        },
+        "frame_rate_numerator": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000000
+        },
+        "frame_rate_denominator": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000000
+        },
+        "sample_rate": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 768000
+        },
+        "channels": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 256
+        },
+        "duration_us": {
+          "$ref": "#/$defs/duration"
+        }
+      },
+      "dependentRequired": {
+        "frame_rate_numerator": [
+          "frame_rate_denominator"
+        ],
+        "frame_rate_denominator": [
+          "frame_rate_numerator"
+        ]
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "category",
+        "severity",
+        "evidence",
+        "count",
+        "stream_index",
+        "interval",
+        "localization"
+      ],
+      "properties": {
+        "category": {
+          "enum": [
+            "container_error",
+            "missing_initialization",
+            "index_error",
+            "packet_error",
+            "decoder_error",
+            "timestamp_error",
+            "suspected_truncation",
+            "unsupported_format",
+            "unsupported_codec",
+            "encrypted_stream",
+            "io_error",
+            "input_changed",
+            "resource_limit",
+            "policy_blocked",
+            "stream_loss",
+            "verification_error",
+            "unclassified_error"
+          ]
+        },
+        "severity": {
+          "enum": [
+            "info",
+            "warning",
+            "error"
+          ]
+        },
+        "evidence": {
+          "enum": [
+            "container_reported",
+            "decoder_reported",
+            "heuristic",
+            "io_reported",
+            "policy",
+            "verification"
+          ]
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000000
+        },
+        "stream_index": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 4095
+        },
+        "interval": {
+          "$ref": "#/$defs/optional_interval"
+        },
+        "localization": {
+          "enum": [
+            "reported",
+            "estimated",
+            "unknown"
+          ]
+        }
+      }
+    },
+    "attempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "strategy",
+        "profile",
+        "outcome",
+        "reason"
+      ],
+      "properties": {
+        "strategy": {
+          "enum": [
+            "remux",
+            "reencode",
+            "section_salvage",
+            "reference_assisted"
+          ]
+        },
+        "profile": {
+          "enum": [
+            "container_repair",
+            "compatible_sdr",
+            "preserve_decoded_samples",
+            "none"
+          ]
+        },
+        "outcome": {
+          "enum": [
+            "succeeded",
+            "failed",
+            "blocked",
+            "cancelled"
+          ]
+        },
+        "reason": {
+          "enum": [
+            "none",
+            "backend_error",
+            "missing_capability",
+            "policy_limit",
+            "resource_limit",
+            "input_changed",
+            "verification_failed",
+            "operator_cancelled",
+            "unknown",
+            "size_target_exceeded",
+            "partial_salvage"
+          ]
+        },
+        "encoder": {
+          "enum": [
+            "ffv1",
+            "h264_amf",
+            "h264_nvenc",
+            "h264_qsv",
+            "h264_videotoolbox",
+            "hevc_amf",
+            "hevc_nvenc",
+            "hevc_qsv",
+            "hevc_videotoolbox",
+            "libx264",
+            "libx265",
+            "none"
+          ]
+        },
+        "decoder": {
+          "enum": [
+            "cuda",
+            "d3d11va",
+            "dxva2",
+            "none",
+            "qsv",
+            "software",
+            "vaapi",
+            "videotoolbox"
+          ]
+        },
+        "verification": {
+          "$ref": "#/$defs/verification"
+        },
+        "verification_issues": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "enum": [
+              "decode_check_failed",
+              "stream_count_changed",
+              "stream_properties_changed",
+              "codec_changed",
+              "frame_rate_changed",
+              "color_or_layout_changed",
+              "av_start_offset_changed",
+              "decoded_duration_changed",
+              "duration_unknown",
+              "output_longer",
+              "output_shorter",
+              "shortening_budget_exceeded",
+              "salvage_too_short"
+            ]
+          }
+        }
+      }
+    },
+    "edit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "input_interval",
+        "output_interval",
+        "timing_confidence"
+      ],
+      "properties": {
+        "action": {
+          "enum": [
+            "cut",
+            "fill_black",
+            "fill_freeze",
+            "fill_silence",
+            "decoder_concealment_suspected",
+            "packet_drop_reported"
+          ]
+        },
+        "input_interval": {
+          "$ref": "#/$defs/optional_interval"
+        },
+        "output_interval": {
+          "$ref": "#/$defs/optional_interval"
+        },
+        "timing_confidence": {
+          "enum": [
+            "reported",
+            "estimated",
+            "unknown"
+          ]
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "decode_check",
+        "stream_check",
+        "timing_check"
+      ],
+      "properties": {
+        "decode_check": {
+          "enum": [
+            "not_run",
+            "passed",
+            "failed",
+            "inconclusive"
+          ]
+        },
+        "stream_check": {
+          "enum": [
+            "not_run",
+            "passed",
+            "failed",
+            "inconclusive"
+          ]
+        },
+        "timing_check": {
+          "enum": [
+            "not_run",
+            "passed",
+            "failed",
+            "inconclusive"
+          ]
+        }
+      }
+    },
+    "file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "file_ref",
+        "scan_depth",
+        "scan_state",
+        "integrity",
+        "completeness",
+        "container",
+        "input_duration_us",
+        "output_duration_us",
+        "streams",
+        "streams_omitted",
+        "findings",
+        "findings_omitted",
+        "recovery_state",
+        "attempts",
+        "edits",
+        "edits_omitted",
+        "verification"
+      ],
+      "properties": {
+        "file_ref": {
+          "type": "string",
+          "pattern": "^f_[a-f0-9]{64}$",
+          "minLength": 66,
+          "maxLength": 66
+        },
+        "scan_depth": {
+          "enum": [
+            "quick",
+            "full",
+            "focused"
+          ]
+        },
+        "scan_state": {
+          "enum": [
+            "complete",
+            "partial",
+            "blocked",
+            "cancelled",
+            "failed"
+          ]
+        },
+        "integrity": {
+          "enum": [
+            "no_errors_detected",
+            "damage_detected",
+            "suspected_damage",
+            "unreadable",
+            "unsupported",
+            "inconclusive",
+            "quick_check_only"
+          ]
+        },
+        "completeness": {
+          "enum": [
+            "unknown",
+            "suspected_truncated",
+            "source_match",
+            "source_mismatch"
+          ]
+        },
+        "container": {
+          "enum": [
+            "mp4_mov",
+            "matroska_webm",
+            "avi",
+            "flv",
+            "mpeg_ps",
+            "mpeg_ts",
+            "asf_wmv",
+            "ogg",
+            "mxf",
+            "realmedia",
+            "other",
+            "unknown"
+          ]
+        },
+        "input_duration_us": {
+          "$ref": "#/$defs/duration"
+        },
+        "output_duration_us": {
+          "$ref": "#/$defs/duration"
+        },
+        "streams": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "#/$defs/stream"
+          }
+        },
+        "streams_omitted": {
+          "$ref": "#/$defs/count"
+        },
+        "findings": {
+          "type": "array",
+          "maxItems": 2048,
+          "items": {
+            "$ref": "#/$defs/finding"
+          }
+        },
+        "findings_omitted": {
+          "$ref": "#/$defs/count"
+        },
+        "recovery_state": {
+          "enum": [
+            "not_requested",
+            "not_needed",
+            "planned",
+            "blocked",
+            "failed",
+            "verified",
+            "verified_with_losses",
+            "verification_inconclusive"
+          ]
+        },
+        "attempts": {
+          "type": "array",
+          "maxItems": 80,
+          "items": {
+            "$ref": "#/$defs/attempt"
+          }
+        },
+        "edits": {
+          "type": "array",
+          "maxItems": 2048,
+          "items": {
+            "$ref": "#/$defs/edit"
+          }
+        },
+        "edits_omitted": {
+          "$ref": "#/$defs/count"
+        },
+        "verification": {
+          "$ref": "#/$defs/verification"
+        },
+        "losses": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "enum": [
+              "metadata_removed",
+              "lossy_encoding",
+              "concealment_possible",
+              "packet_drop_possible",
+              "tracks_omitted",
+              "timing_changed",
+              "source_incomplete",
+              "properties_unverified",
+              "audio_normalized",
+              "partial_salvage"
+            ]
+          }
+        },
+        "diagnostics": {
+          "type": "array",
+          "maxItems": 1024,
+          "items": {
+            "$ref": "#/$defs/worker_diagnostic"
+          }
+        },
+        "diagnostics_omitted": {
+          "$ref": "#/$defs/count"
+        },
+        "recovery_notes": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "enum": [
+              "plan_blocked",
+              "duration_changed",
+              "size_target_approximate",
+              "size_adjustment_retry",
+              "size_target_exceeded",
+              "size_below_target",
+              "size_target_met",
+              "loudness_playback",
+              "loudness_broadcast",
+              "size_above_target",
+              "size_estimate_fallback",
+              "partial_salvage_verified"
+            ]
+          }
+        },
+        "rate_control": {
+          "enum": [
+            "lossless",
+            "auto",
+            "quality",
+            "source_size",
+            "target_size",
+            "bitrate"
+          ]
+        },
+        "processing": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "cpu_budget",
+            "runners",
+            "hardware_decoding"
+          ],
+          "properties": {
+            "cpu_budget": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1024
+            },
+            "runners": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1024
+            },
+            "hardware_decoding": {
+              "enum": [
+                "enabled",
+                "disabled"
+              ]
+            }
+          }
+        },
+        "migration": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "input_kind",
+            "action",
+            "copy_check",
+            "timestamps",
+            "reason"
+          ],
+          "properties": {
+            "input_kind": {
+              "enum": [
+                "video",
+                "other"
+              ]
+            },
+            "action": {
+              "enum": [
+                "copied_healthy",
+                "copied_other",
+                "repaired",
+                "retained_for_review",
+                "failed",
+                "excluded_unresolved",
+                "copied_unresolved",
+                "salvaged_partial"
+              ]
+            },
+            "copy_check": {
+              "enum": [
+                "passed",
+                "failed",
+                "not_run"
+              ]
+            },
+            "timestamps": {
+              "enum": [
+                "preserved",
+                "not_preserved",
+                "not_requested"
+              ]
+            },
+            "reason": {
+              "enum": [
+                "none",
+                "recovery_unverified",
+                "input_changed",
+                "io_error",
+                "disk_limit",
+                "source_read_failed",
+                "output_write_failed",
+                "copy_verification_failed",
+                "output_publish_failed",
+                "output_access_denied",
+                "output_filesystem_unsupported",
+                "output_path_too_long",
+                "output_busy",
+                "output_exists",
+                "backend_unavailable"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "worker_diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stage",
+        "stream_index",
+        "outcome",
+        "return_code",
+        "limit_reason",
+        "elapsed_ms",
+        "threads",
+        "decoder",
+        "encoder",
+        "error_code",
+        "messages"
+      ],
+      "properties": {
+        "stage": {
+          "enum": [
+            "decode",
+            "encode",
+            "inspection",
+            "plan",
+            "probe",
+            "publish",
+            "verify_decode",
+            "verify_probe"
+          ]
+        },
+        "stream_index": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 4095
+        },
+        "outcome": {
+          "enum": [
+            "completed",
+            "failed",
+            "limited",
+            "fallback",
+            "blocked",
+            "cancelled"
+          ]
+        },
+        "return_code": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": -2147483648,
+          "maximum": 4294967295
+        },
+        "limit_reason": {
+          "enum": [
+            "none",
+            "timeout",
+            "output_limit",
+            "candidate_limit",
+            "disk_limit",
+            "unknown"
+          ]
+        },
+        "elapsed_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "threads": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "decoder": {
+          "enum": [
+            "cuda",
+            "d3d11va",
+            "dxva2",
+            "none",
+            "qsv",
+            "software",
+            "vaapi",
+            "videotoolbox"
+          ]
+        },
+        "encoder": {
+          "enum": [
+            "ffv1",
+            "h264_amf",
+            "h264_nvenc",
+            "h264_qsv",
+            "h264_videotoolbox",
+            "hevc_amf",
+            "hevc_nvenc",
+            "hevc_qsv",
+            "hevc_videotoolbox",
+            "libx264",
+            "libx265",
+            "none"
+          ]
+        },
+        "error_code": {
+          "enum": [
+            "backend_invalid",
+            "backend_unavailable",
+            "cancelled",
+            "checkpoint_invalid",
+            "checkpoint_policy_changed",
+            "checkpoint_sources_changed",
+            "cleanup_confirmation",
+            "cleanup_incomplete",
+            "copy_verification_failed",
+            "dependency_unavailable",
+            "disk_limit",
+            "encoding_options_conflict",
+            "export_too_large",
+            "gui_unavailable",
+            "input_changed",
+            "input_rejected",
+            "internal_error",
+            "invalid_arguments",
+            "invalid_export",
+            "io_error",
+            "job_busy",
+            "job_invalid",
+            "migration_access",
+            "migration_empty",
+            "migration_link",
+            "migration_mount",
+            "migration_name_conflict",
+            "migration_names_required",
+            "migration_network",
+            "migration_not_folder",
+            "migration_output_overlap",
+            "migration_selection",
+            "migration_software_overlap",
+            "migration_source_location",
+            "migration_special_file",
+            "migration_storage_overlap",
+            "migration_workspace_overlap",
+            "none",
+            "output_access_denied",
+            "output_busy",
+            "output_exists",
+            "output_filesystem_unsupported",
+            "output_path_too_long",
+            "output_publish_failed",
+            "output_write_failed",
+            "passphrase_required",
+            "privacy_downgrade",
+            "rate_target_unavailable",
+            "recovery_blocked",
+            "selection_required",
+            "settings_invalid",
+            "settings_location",
+            "source_read_failed",
+            "worker_cleanup_failed",
+            "workspace_rejected",
+            "resume_storage_changed",
+            "resume_output_conflict",
+            "plan_inspection_failed",
+            "plan_input_unreadable",
+            "plan_input_unsupported",
+            "plan_source_evidence",
+            "plan_no_av_streams",
+            "plan_auxiliary_tracks",
+            "plan_mp4_codec",
+            "plan_trim_range",
+            "plan_pixel_format",
+            "plan_interlaced",
+            "plan_hdr",
+            "plan_dimensions",
+            "plan_audio_properties",
+            "plan_audio_layout",
+            "plan_audio_samples",
+            "retry_session_unavailable",
+            "migration_output_not_empty",
+            "ffmpeg_process_failed"
+          ]
+        },
+        "messages": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "category",
+              "severity",
+              "count"
+            ],
+            "properties": {
+              "category": {
+                "enum": [
+                  "container_error",
+                  "decoder_error",
+                  "encrypted_stream",
+                  "index_error",
+                  "io_error",
+                  "missing_initialization",
+                  "packet_error",
+                  "policy_blocked",
+                  "suspected_truncation",
+                  "timestamp_error",
+                  "unclassified_error",
+                  "unsupported_codec",
+                  "thread_advisory"
+                ]
+              },
+              "severity": {
+                "enum": [
+                  "warning",
+                  "error"
+                ]
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000000000
+              }
+            }
+          }
+        }
+      }
+    },
+    "migration_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "planned_files",
+        "processed_files",
+        "published_files",
+        "excluded_files",
+        "failed_files",
+        "unprocessed_files",
+        "state",
+        "stop_reason",
+        "stop_stage",
+        "pipeline_issues"
+      ],
+      "properties": {
+        "planned_files": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "processed_files": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "published_files": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "excluded_files": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "failed_files": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "unprocessed_files": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "state": {
+          "enum": [
+            "complete",
+            "needs_review",
+            "incomplete",
+            "interrupted"
+          ]
+        },
+        "stop_reason": {
+          "enum": [
+            "backend_invalid",
+            "backend_unavailable",
+            "cancelled",
+            "checkpoint_invalid",
+            "checkpoint_policy_changed",
+            "checkpoint_sources_changed",
+            "cleanup_confirmation",
+            "cleanup_incomplete",
+            "copy_verification_failed",
+            "dependency_unavailable",
+            "disk_limit",
+            "encoding_options_conflict",
+            "export_too_large",
+            "gui_unavailable",
+            "input_changed",
+            "input_rejected",
+            "internal_error",
+            "invalid_arguments",
+            "invalid_export",
+            "io_error",
+            "job_busy",
+            "job_invalid",
+            "migration_access",
+            "migration_empty",
+            "migration_link",
+            "migration_mount",
+            "migration_name_conflict",
+            "migration_names_required",
+            "migration_network",
+            "migration_not_folder",
+            "migration_output_overlap",
+            "migration_selection",
+            "migration_software_overlap",
+            "migration_source_location",
+            "migration_special_file",
+            "migration_storage_overlap",
+            "migration_workspace_overlap",
+            "none",
+            "operator_cancelled",
+            "output_access_denied",
+            "output_busy",
+            "output_exists",
+            "output_filesystem_unsupported",
+            "output_path_too_long",
+            "output_publish_failed",
+            "output_write_failed",
+            "passphrase_required",
+            "privacy_downgrade",
+            "rate_target_unavailable",
+            "recovery_blocked",
+            "selection_required",
+            "settings_invalid",
+            "settings_location",
+            "source_read_failed",
+            "worker_cleanup_failed",
+            "workspace_rejected",
+            "resume_storage_changed",
+            "resume_output_conflict",
+            "plan_inspection_failed",
+            "plan_input_unreadable",
+            "plan_input_unsupported",
+            "plan_source_evidence",
+            "plan_no_av_streams",
+            "plan_auxiliary_tracks",
+            "plan_mp4_codec",
+            "plan_trim_range",
+            "plan_pixel_format",
+            "plan_interlaced",
+            "plan_hdr",
+            "plan_dimensions",
+            "plan_audio_properties",
+            "plan_audio_layout",
+            "plan_audio_samples",
+            "retry_session_unavailable",
+            "migration_output_not_empty",
+            "ffmpeg_process_failed"
+          ]
+        },
+        "stop_stage": {
+          "enum": [
+            "none",
+            "prepare_output",
+            "hardware_check",
+            "process_files",
+            "final_source_check",
+            "write_status",
+            "write_event_log",
+            "close_event_log",
+            "save_session_report",
+            "export_diagnostics",
+            "cleanup"
+          ]
+        },
+        "pipeline_issues": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "stage",
+              "reason"
+            ],
+            "properties": {
+              "stage": {
+                "enum": [
+                  "prepare_output",
+                  "hardware_check",
+                  "process_files",
+                  "final_source_check",
+                  "write_status",
+                  "write_event_log",
+                  "close_event_log",
+                  "save_session_report",
+                  "export_diagnostics",
+                  "cleanup"
+                ]
+              },
+              "reason": {
+                "enum": [
+                  "backend_invalid",
+                  "backend_unavailable",
+                  "cancelled",
+                  "checkpoint_invalid",
+                  "checkpoint_policy_changed",
+                  "checkpoint_sources_changed",
+                  "cleanup_confirmation",
+                  "cleanup_incomplete",
+                  "copy_verification_failed",
+                  "dependency_unavailable",
+                  "disk_limit",
+                  "encoding_options_conflict",
+                  "export_too_large",
+                  "gui_unavailable",
+                  "input_changed",
+                  "input_rejected",
+                  "internal_error",
+                  "invalid_arguments",
+                  "invalid_export",
+                  "io_error",
+                  "job_busy",
+                  "job_invalid",
+                  "migration_access",
+                  "migration_empty",
+                  "migration_link",
+                  "migration_mount",
+                  "migration_name_conflict",
+                  "migration_names_required",
+                  "migration_network",
+                  "migration_not_folder",
+                  "migration_output_overlap",
+                  "migration_selection",
+                  "migration_software_overlap",
+                  "migration_source_location",
+                  "migration_special_file",
+                  "migration_storage_overlap",
+                  "migration_workspace_overlap",
+                  "none",
+                  "operator_cancelled",
+                  "output_access_denied",
+                  "output_busy",
+                  "output_exists",
+                  "output_filesystem_unsupported",
+                  "output_path_too_long",
+                  "output_publish_failed",
+                  "output_write_failed",
+                  "passphrase_required",
+                  "privacy_downgrade",
+                  "rate_target_unavailable",
+                  "recovery_blocked",
+                  "selection_required",
+                  "settings_invalid",
+                  "settings_location",
+                  "source_read_failed",
+                  "worker_cleanup_failed",
+                  "workspace_rejected",
+                  "resume_storage_changed",
+                  "resume_output_conflict",
+                  "plan_inspection_failed",
+                  "plan_input_unreadable",
+                  "plan_input_unsupported",
+                  "plan_source_evidence",
+                  "plan_no_av_streams",
+                  "plan_auxiliary_tracks",
+                  "plan_mp4_codec",
+                  "plan_trim_range",
+                  "plan_pixel_format",
+                  "plan_interlaced",
+                  "plan_hdr",
+                  "plan_dimensions",
+                  "plan_audio_properties",
+                  "plan_audio_layout",
+                  "plan_audio_samples",
+                  "retry_session_unavailable",
+                  "migration_output_not_empty",
+                  "ffmpeg_process_failed"
+                ]
+              }
+            }
+          }
+        },
+        "hardware": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "decode_requested",
+            "encode_requested",
+            "integrity_decoder",
+            "decode_selection",
+            "peak_active_routes",
+            "peak_gpu_jobs",
+            "routes"
+          ],
+          "properties": {
+            "decode_requested": {
+              "type": "boolean"
+            },
+            "encode_requested": {
+              "type": "boolean"
+            },
+            "integrity_decoder": {
+              "const": "software"
+            },
+            "decode_selection": {
+              "enum": [
+                "disabled",
+                "preservation_software",
+                "qualified",
+                "decoder_unavailable",
+                "combined_route_failed"
+              ]
+            },
+            "peak_active_routes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1024
+            },
+            "peak_gpu_jobs": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1024
+            },
+            "routes": {
+              "type": "array",
+              "maxItems": 32,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "slot",
+                  "decoder",
+                  "encoder",
+                  "peak_jobs"
+                ],
+                "properties": {
+                  "slot": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 32
+                  },
+                  "decoder": {
+                    "enum": [
+                      "cuda",
+                      "d3d11va",
+                      "dxva2",
+                      "none",
+                      "qsv",
+                      "software",
+                      "vaapi",
+                      "videotoolbox"
+                    ]
+                  },
+                  "encoder": {
+                    "enum": [
+                      "ffv1",
+                      "h264_amf",
+                      "h264_nvenc",
+                      "h264_qsv",
+                      "h264_videotoolbox",
+                      "hevc_amf",
+                      "hevc_nvenc",
+                      "hevc_qsv",
+                      "hevc_videotoolbox",
+                      "libx264",
+                      "libx265",
+                      "none"
+                    ]
+                  },
+                  "peak_jobs": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 1024
+                  }
+                }
+              }
+            }
+          }
+        },
+        "partial_files": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        }
+      }
+    }
+  }
+}

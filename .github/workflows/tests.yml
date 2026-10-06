@@ -1,0 +1,57 @@
+name: Synthetic tests
+# Rapid development: run the full matrix only at an explicit checkpoint.
+# Release packaging also requires explicit dispatch; tags do not trigger it.
+on: [workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-15, ubuntu-24.04, ubuntu-24.04-arm]
+        python: ['3.11', '3.13']
+    runs-on: ${{ matrix.os }}
+    env:
+      PYTHONPATH: src
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Check source-only Git index
+        run: python tools/check_repository.py
+      # Public software on disposable CI hosts. Runtime installation stays offline.
+      - name: Provision pinned native backend
+        if: matrix.python == '3.13'
+        run: python tools/install_ffmpeg.py
+      - name: Prepare disposable Linux GUI test display
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y xvfb libtk8.6
+      - name: Select generated-media test executables
+        if: matrix.python == '3.13'
+        shell: python
+        run: |
+          import os
+          from videomate.dependencies import load_bundle
+          bundle = load_bundle()
+          with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as output:
+              for name in ('ffmpeg', 'ffprobe'):
+                  output.write('VIDEOMATE_TEST_' + name.upper() + '=' + str(getattr(bundle, name)) + '\n')
+              output.write('VIDEOMATE_TEST_GUI=1\n')
+      - name: Test with synthetic inputs only
+        if: runner.os != 'Linux'
+        run: python -m unittest discover -s tests -v
+      - name: Test Linux with synthetic inputs and virtual display
+        if: runner.os == 'Linux'
+        run: xvfb-run -a python -m unittest discover -s tests -v
+      - name: Check Windows offline launcher
+        if: runner.os == 'Windows' && matrix.python == '3.13'
+        run: .\start.bat --offline --check
+      - name: Check Unix offline launcher
+        if: runner.os != 'Windows' && matrix.python == '3.13'
+        run: sh start.sh --offline --check
+      - name: Build offline development archive
+        run: python tools/build_zipapp.py
+      - name: Smoke test archive
+        run: python dist/videomate.pyz --version

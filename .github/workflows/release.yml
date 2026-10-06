@@ -1,0 +1,133 @@
+name: Build release packages
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing version tag to build (for example v0.6.1)
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+jobs:
+  packages:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: windows-x86_64
+            architecture: x64
+            desktop: true
+          - os: macos-15
+            platform: macos-arm64
+            architecture: arm64
+            desktop: true
+          - os: ubuntu-24.04
+            platform: linux-x86_64
+            architecture: x64
+            desktop: false
+          - os: ubuntu-24.04-arm
+            platform: linux-arm64
+            architecture: arm64
+            desktop: false
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    env:
+      PYTHONPATH: src
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+      RELEASE_PLATFORM: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref_name }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          architecture: ${{ matrix.architecture }}
+      - name: Validate tag, platform and source index
+        shell: python
+        run: |
+          import os, subprocess, sys
+          from videomate import __version__
+          from videomate.dependencies import platform_tag
+          assert os.environ['RELEASE_TAG'] == 'v' + __version__
+          assert os.environ['RELEASE_PLATFORM'] == platform_tag()
+          subprocess.run([sys.executable, 'tools/check_repository.py'], check=True)
+      - name: Prepare public pinned dependencies
+        shell: python
+        run: |
+          import os, subprocess, sys
+          subprocess.run([sys.executable, 'tools/install_ffmpeg.py'], check=True)
+          subprocess.run([sys.executable, 'tools/install_python.py', '--platform', os.environ['RELEASE_PLATFORM'], '--online'], check=True)
+      - name: Prepare Linux display
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y xvfb libtk8.6
+      - name: Configure generated-media tests
+        shell: python
+        run: |
+          import os
+          from videomate.dependencies import load_bundle
+          bundle = load_bundle()
+          with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as output:
+              for name in ('ffmpeg', 'ffprobe'):
+                  output.write('VIDEOMATE_TEST_' + name.upper() + '=' + str(getattr(bundle, name)) + '\n')
+              output.write('VIDEOMATE_TEST_GUI=1\n')
+      - name: Test native source
+        if: runner.os != 'Linux'
+        run: python -m unittest discover -s tests -v
+      - name: Test Linux source
+        if: runner.os == 'Linux'
+        run: xvfb-run -a python -m unittest discover -s tests -v
+      - name: Build runtime kit
+        shell: python
+        run: |
+          import os, subprocess, sys
+          from videomate import __version__
+          subprocess.run([sys.executable, 'tools/build_zipapp.py'], check=True)
+          kit = 'dist/videomate-' + __version__ + '-' + os.environ['RELEASE_PLATFORM'] + '-runtime-kit.zip'
+          subprocess.run([sys.executable, 'tools/build_offline_bundle.py', '--platform', os.environ['RELEASE_PLATFORM'], '--include-runtime', '--output', kit], check=True)
+          command = [sys.executable, 'tools/verify_kit.py', kit, '--execute']
+          if sys.platform == 'linux':
+              command = ['xvfb-run', '-a'] + command
+          subprocess.run(command, check=True)
+      - name: Build native desktop
+        if: matrix.desktop
+        run: |
+          python -m pip install -r tools/requirements-build.txt
+          python tools/build_desktop.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.platform }}
+          path: |
+            dist/*-desktop.zip
+            dist/*-desktop.zip.sha256
+            dist/*-runtime-kit.zip
+            dist/*-runtime-kit.zip.sha256
+          if-no-files-found: error
+          retention-days: 14
+  draft:
+    needs: packages
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref_name }}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: release-assets
+          merge-multiple: true
+      - name: Verify checksums and create a draft prerelease
+        shell: bash
+        run: |
+          python tools/verify_release_assets.py release-assets
+          gh release create "$RELEASE_TAG" release-assets/*.zip release-assets/*.sha256 --verify-tag --draft --prerelease --title "VideoMate $RELEASE_TAG" --notes-file docs/release-notes.md

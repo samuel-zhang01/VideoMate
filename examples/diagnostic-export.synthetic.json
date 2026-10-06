@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "data_origin": "synthetic_example",
+  "export_profile": "detailed",
+  "export_scope": "00000000000000000000000000000001",
+  "job_ref": "j_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "environment": {
+    "app_version": "0.0.0",
+    "ffmpeg_version": "0.0.0",
+    "ffprobe_version": "0.0.0",
+    "os": "windows",
+    "architecture": "x86_64"
+  },
+  "files": [
+    {
+      "file_ref": "f_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "scan_depth": "full",
+      "scan_state": "complete",
+      "integrity": "damage_detected",
+      "completeness": "unknown",
+      "container": "mp4_mov",
+      "input_duration_us": 60000000,
+      "output_duration_us": 60000000,
+      "streams": [
+        {
+          "index": 0,
+          "kind": "video",
+          "codec": "h264",
+          "coverage": "full",
+          "decode_status": "errors_detected",
+          "profile": "high",
+          "pixel_format": "yuv420p",
+          "width": 1280,
+          "height": 720,
+          "bit_depth": 8,
+          "frame_rate_numerator": 25,
+          "frame_rate_denominator": 1,
+          "duration_us": 60000000
+        },
+        {
+          "index": 1,
+          "kind": "audio",
+          "codec": "aac",
+          "coverage": "full",
+          "decode_status": "no_errors_detected",
+          "sample_rate": 48000,
+          "channels": 2,
+          "duration_us": 60000000
+        }
+      ],
+      "streams_omitted": 0,
+      "findings": [
+        {
+          "category": "decoder_error",
+          "severity": "error",
+          "evidence": "decoder_reported",
+          "count": 3,
+          "stream_index": 0,
+          "interval": {"start_us": 12000000, "end_us": 12400000},
+          "localization": "estimated"
+        }
+      ],
+      "findings_omitted": 0,
+      "recovery_state": "verified_with_losses",
+      "attempts": [
+        {
+          "strategy": "reencode",
+          "profile": "compatible_sdr",
+          "outcome": "succeeded",
+          "reason": "none"
+        }
+      ],
+      "edits": [
+        {
+          "action": "decoder_concealment_suspected",
+          "input_interval": {"start_us": 12000000, "end_us": 12400000},
+          "output_interval": {"start_us": 12000000, "end_us": 12400000},
+          "timing_confidence": "estimated"
+        }
+      ],
+      "edits_omitted": 0,
+      "verification": {
+        "decode_check": "passed",
+        "stream_check": "passed",
+        "timing_check": "passed"
+      }
+    }
+  ],
+  "files_omitted": 0
+}
