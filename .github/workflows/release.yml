@@ -6,47 +6,63 @@ on:
         description: Existing version tag to build (for example v0.6.1)
         required: true
         type: string
+      include_hosted:
+        description: Opt in to potentially paid hosted Windows and Linux ARM builds
+        type: boolean
+        default: false
+      create_draft:
+        description: Create a draft prerelease only after all four platforms pass
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
   group: release-${{ inputs.tag || github.ref_name }}
   cancel-in-progress: false
 jobs:
+  matrix:
+    if: github.ref == 'refs/heads/main' && github.repository == 'samuel-zhang01/VideoMate'
+    runs-on: [deploy-vps, videomate]
+    outputs:
+      targets: ${{ steps.targets.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - id: targets
+        env:
+          INCLUDE_HOSTED: ${{ inputs.include_hosted }}
+        run: python3 tools/ci_support.py matrix --kind release --repo "$GITHUB_REPOSITORY" --include-hosted "$INCLUDE_HOSTED" >> "$GITHUB_OUTPUT"
   packages:
+    needs: matrix
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - os: windows-latest
-            platform: windows-x86_64
-            architecture: x64
-            desktop: true
-          - os: macos-15
-            platform: macos-arm64
-            architecture: arm64
-            desktop: true
-          - os: ubuntu-24.04
-            platform: linux-x86_64
-            architecture: x64
-            desktop: false
-          - os: ubuntu-24.04-arm
-            platform: linux-arm64
-            architecture: arm64
-            desktop: false
-    runs-on: ${{ matrix.os }}
+      matrix: ${{ fromJSON(needs.matrix.outputs.targets) }}
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 30
     env:
       PYTHONPATH: src
       RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
       RELEASE_PLATFORM: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.tag || github.ref_name }}
-      - uses: actions/setup-python@v5
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        if: matrix.hosted
         with:
           python-version: '3.13'
           architecture: ${{ matrix.architecture }}
+      - name: Prepare checksum-pinned disposable local Python and Tk
+        if: '!matrix.hosted'
+        shell: bash
+        run: |
+          if [[ "$RUNNER_OS" == macOS ]]; then
+            /opt/homebrew/bin/python3.13 tools/ci_support.py runtime --python 3.13
+          else
+            python3 tools/ci_support.py runtime --python 3.13
+          fi
       - name: Validate tag, platform and source index
         shell: python
         run: |
@@ -62,9 +78,12 @@ jobs:
           import os, subprocess, sys
           subprocess.run([sys.executable, 'tools/install_ffmpeg.py'], check=True)
           subprocess.run([sys.executable, 'tools/install_python.py', '--platform', os.environ['RELEASE_PLATFORM'], '--online'], check=True)
-      - name: Prepare Linux display
-        if: runner.os == 'Linux'
+      - name: Prepare hosted Linux display
+        if: runner.os == 'Linux' && matrix.hosted
         run: sudo apt-get update && sudo apt-get install -y xvfb libtk8.6
+      - name: Verify local Linux virtual display is installed
+        if: runner.os == 'Linux' && !matrix.hosted
+        run: command -v xvfb-run
       - name: Configure generated-media tests
         shell: python
         run: |
@@ -108,9 +127,19 @@ jobs:
             dist/*-runtime-kit.zip.sha256
           if-no-files-found: error
           retention-days: 14
+      - name: Remove only this job's disposable Python and Tk
+        if: always() && !matrix.hosted
+        shell: bash
+        run: |
+          if [[ "$RUNNER_OS" == macOS ]]; then
+            /opt/homebrew/bin/python3.13 tools/ci_support.py cleanup
+          else
+            /usr/bin/python3 tools/ci_support.py cleanup
+          fi
   draft:
+    if: inputs.include_hosted && inputs.create_draft
     needs: packages
-    runs-on: ubuntu-24.04
+    runs-on: [deploy-vps, videomate]
     permissions:
       contents: write
     env:
@@ -118,9 +147,10 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.tag || github.ref_name }}
+          persist-credentials: false
       - uses: actions/download-artifact@v4
         with:
           pattern: release-*
@@ -129,5 +159,5 @@ jobs:
       - name: Verify checksums and create a draft prerelease
         shell: bash
         run: |
-          python tools/verify_release_assets.py release-assets
+          python3 tools/verify_release_assets.py release-assets
           gh release create "$RELEASE_TAG" release-assets/*.zip release-assets/*.sha256 --verify-tag --draft --prerelease --title "VideoMate $RELEASE_TAG" --notes-file docs/release-notes.md

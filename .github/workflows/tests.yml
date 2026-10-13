@@ -1,32 +1,70 @@
 name: Synthetic tests
-# Rapid development: run the full matrix only at an explicit checkpoint.
-# Release packaging also requires explicit dispatch; tags do not trigger it.
-on: [workflow_dispatch]
+# Broad/native tests remain an explicit checkpoint, never a push/PR trigger.
+on:
+  workflow_dispatch:
+    inputs:
+      include_hosted:
+        description: Opt in to potentially paid hosted Windows and Linux ARM coverage
+        type: boolean
+        default: false
 permissions:
   contents: read
+concurrency:
+  group: synthetic-checkpoint-${{ github.ref }}
+  cancel-in-progress: false
 jobs:
+  matrix:
+    if: github.ref == 'refs/heads/main' && github.repository == 'samuel-zhang01/VideoMate'
+    runs-on: [deploy-vps, videomate]
+    outputs:
+      targets: ${{ steps.targets.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - id: targets
+        env:
+          INCLUDE_HOSTED: ${{ inputs.include_hosted }}
+        run: python3 tools/ci_support.py matrix --kind tests --repo "$GITHUB_REPOSITORY" --include-hosted "$INCLUDE_HOSTED" >> "$GITHUB_OUTPUT"
   tests:
+    needs: matrix
     strategy:
       fail-fast: false
-      matrix:
-        os: [windows-latest, macos-15, ubuntu-24.04, ubuntu-24.04-arm]
-        python: ['3.11', '3.13']
-    runs-on: ${{ matrix.os }}
+      matrix: ${{ fromJSON(needs.matrix.outputs.targets) }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 35
     env:
       PYTHONPATH: src
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        if: matrix.hosted
         with:
           python-version: ${{ matrix.python }}
+          architecture: ${{ matrix.architecture }}
+      - name: Prepare checksum-pinned disposable local Python and Tk
+        if: '!matrix.hosted'
+        shell: bash
+        env:
+          PYTHON_VERSION: ${{ matrix.python }}
+        run: |
+          if [[ "$RUNNER_OS" == macOS ]]; then
+            /opt/homebrew/bin/python3.13 tools/ci_support.py runtime --python "$PYTHON_VERSION"
+          else
+            python3 tools/ci_support.py runtime --python "$PYTHON_VERSION"
+          fi
       - name: Check source-only Git index
         run: python tools/check_repository.py
-      # Public software on disposable CI hosts. Runtime installation stays offline.
-      - name: Provision pinned native backend
+      - name: Provision pinned public native backend
         if: matrix.python == '3.13'
         run: python tools/install_ffmpeg.py
-      - name: Prepare disposable Linux GUI test display
-        if: runner.os == 'Linux'
+      - name: Verify local Linux virtual display is installed
+        if: runner.os == 'Linux' && !matrix.hosted
+        run: command -v xvfb-run
+      - name: Prepare disposable hosted Linux display
+        if: runner.os == 'Linux' && matrix.hosted
         run: sudo apt-get update && sudo apt-get install -y xvfb libtk8.6
       - name: Select generated-media test executables
         if: matrix.python == '3.13'
@@ -55,3 +93,12 @@ jobs:
         run: python tools/build_zipapp.py
       - name: Smoke test archive
         run: python dist/videomate.pyz --version
+      - name: Remove only this job's disposable Python and Tk
+        if: always() && !matrix.hosted
+        shell: bash
+        run: |
+          if [[ "$RUNNER_OS" == macOS ]]; then
+            /opt/homebrew/bin/python3.13 tools/ci_support.py cleanup
+          else
+            /usr/bin/python3 tools/ci_support.py cleanup
+          fi

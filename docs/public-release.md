@@ -59,7 +59,7 @@ From that new directory, run the index/history checks and redacted Gitleaks scan
 ## Publication handoff
 
 1. Review the prepared source snapshot and attribution. Authorize a **new public source repository** explicitly before creating/uploading it. Do not change the existing private repository's visibility as a shortcut.
-2. Keep GitHub Actions disabled on the new repository before pushing. Retained workflow definitions accept manual dispatch only; enabling/dispatching them needs separate owner authorization. No self-hosted runner/service is installed.
+2. The owner explicitly authorized dedicated local CI on 13 October 2026. Retained workflow definitions still accept manual dispatch only. Default checkpoints use only matching local Linux/macOS listeners; unavailable hosted platforms and draft creation require separate explicit inputs. See [local CI](development/local-ci.md). Media/privacy restrictions remain binding.
 3. Push only the new repository's reviewed `main`; never use `--mirror`, copy `.git`, or migrate old tags/releases/issues/attachments.
 4. Set a concise description, topics, and private vulnerability reporting where supported. Verify the public commit tree and README/license render correctly. Do not publish review reports.
 5. Keep old releases private. Build binaries only from a reviewed public-source commit on matching native hosts and complete [release gates](releases.md), [native build checks](release_development.md), and [third-party notices](../THIRD_PARTY_NOTICES.md).

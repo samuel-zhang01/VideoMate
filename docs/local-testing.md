@@ -2,7 +2,7 @@
 
 VideoMate 0.8.4 supports inspection, repair, migration and a native GUI. Choose Sensitive: Yes/No for new jobs. Assistant testing uses generated media; production media remains operator-only. [Migration and profiles](migration-and-profiles.md), [sensitive treatment](settings-and-privacy.md), [recovery and private resume](recovery-options.md).
 
-GitHub Actions is currently disabled for this repository at the owner's request. Use local synthetic tests and local release builds; do not dispatch hosted jobs. Workflow definitions are retained for a future explicitly configured self-hosted runner setup. No self-hosted runners are installed by this change.
+The owner authorized dedicated local CI on 13 October 2026. Broad synthetic/native tests and release builds remain manual checkpoints. Default dispatches use only the matching local Linux/macOS runners; unavailable Windows/Linux ARM coverage requires explicit hosted opt-in. See [local CI routing and coverage](development/local-ci.md).
 
 ## Start
 
