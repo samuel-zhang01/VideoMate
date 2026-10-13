@@ -15,6 +15,7 @@ DOCUMENTS = (
     "docs/release_development.md", "docs/releases.md", "docs/settings-and-privacy.md",
     "docs/validation-and-roadmap.md", "docs/development/validation.md",
     "docs/development/app-improvement-audit.md",
+    "docs/development/local-ci.md",
 )
 
 

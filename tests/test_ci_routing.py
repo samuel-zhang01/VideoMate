@@ -38,3 +38,13 @@ class CIRoutingTests(unittest.TestCase):
             self.assertTrue(all(r['python']=='3.13' for r in rows))
             self.assertEqual({r['platform'] for r in rows if r['desktop']},
                              {'macos-arm64','windows-x86_64'} if hosted else {'macos-arm64'})
+
+    def test_manual_desktop_defaults_to_local_mac_and_preserves_explicit_windows_opt_in(self):
+        for repo, slug in support.REPOS.items():
+            rows = support.matrix('desktop', repo)['include']
+            self.assertEqual(len(rows), 1)
+            self.assertEqual(rows[0]['platform'], 'macos-arm64')
+            self.assertEqual(rows[0]['runner'], ['local-macos', slug])
+            all_rows = support.matrix('desktop', repo, True)['include']
+            self.assertEqual({r['platform'] for r in all_rows}, {'macos-arm64', 'windows-x86_64'})
+            self.assertTrue(all(r['python'] == '3.13' for r in all_rows))

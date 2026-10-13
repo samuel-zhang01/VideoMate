@@ -1,29 +1,52 @@
 name: Native offline desktops
-on: [workflow_dispatch]
+on:
+  workflow_dispatch:
+    inputs:
+      include_hosted:
+        description: Opt in to potentially paid hosted Windows desktop coverage
+        type: boolean
+        default: false
 permissions:
   contents: read
+concurrency:
+  group: desktop-checkpoint-${{ github.ref }}
+  cancel-in-progress: false
 jobs:
+  matrix:
+    if: github.ref == 'refs/heads/main' && github.repository == 'samuel-zhang01/VideoMate'
+    runs-on: [deploy-vps, videomate]
+    outputs:
+      targets: ${{ steps.targets.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - id: targets
+        env:
+          INCLUDE_HOSTED: ${{ inputs.include_hosted }}
+        run: python3 tools/ci_support.py matrix --kind desktop --repo "$GITHUB_REPOSITORY" --include-hosted "$INCLUDE_HOSTED" >> "$GITHUB_OUTPUT"
   desktop:
+    needs: matrix
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - os: windows-latest
-            platform: windows-x86_64
-            architecture: x64
-          - os: macos-15
-            platform: macos-arm64
-            architecture: arm64
-    runs-on: ${{ matrix.os }}
+      matrix: ${{ fromJSON(needs.matrix.outputs.targets) }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 35
     env:
       PYTHONPATH: src
       VIDEOMATE_TEST_GUI: '1'
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        if: matrix.hosted
         with:
           python-version: '3.13'
           architecture: ${{ matrix.architecture }}
+      - name: Prepare checksum-pinned disposable local Python and Tk
+        if: '!matrix.hosted'
+        run: /opt/homebrew/bin/python3.13 tools/ci_support.py runtime --python 3.13
       - name: Check native architecture
         run: python -c "from videomate.dependencies import platform_tag; assert platform_tag() == '${{ matrix.platform }}'"
       - name: Install build dependencies
@@ -41,15 +64,18 @@ jobs:
                   path = Path('dependencies/ffmpeg/${{ matrix.platform }}/bin/' + name + suffix).resolve()
                   output.write('VIDEOMATE_TEST_' + name.upper() + '=' + str(path) + '\n')
       - name: Test source GUI and recovery with generated media
-        run: python -m unittest discover -s tests -v
+        run: python tools/ci_support.py test
       - name: Check source launcher offline
         shell: python
         run: |
-          import os, subprocess
+          import os, subprocess, sys
           command = ['start.bat', '--offline', '--check'] if os.name == 'nt' else ['sh', 'start.sh', '--offline', '--check']
-          subprocess.run(command, shell=os.name == 'nt', check=True)
+          if os.name == 'nt':
+              subprocess.run(command, shell=True, check=True)
+          else:
+              subprocess.run([sys.executable, 'tools/ci_support.py', 'exec', '--', *command], check=True)
       - name: Build and test bundled GUI
-        run: python tools/build_desktop.py
+        run: python tools/ci_support.py exec -- python tools/build_desktop.py
       - uses: actions/upload-artifact@v4
         with:
           name: videomate-${{ matrix.platform }}-desktop
@@ -58,3 +84,6 @@ jobs:
             dist/*-desktop.zip.sha256
           if-no-files-found: error
           retention-days: 14
+      - name: Remove only this job's disposable Python and Tk
+        if: always() && !matrix.hosted
+        run: /opt/homebrew/bin/python3.13 tools/ci_support.py cleanup

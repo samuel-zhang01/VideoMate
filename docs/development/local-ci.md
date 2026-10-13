@@ -1,8 +1,8 @@
 # Manual local CI and platform coverage
 
 The owner authorized dedicated local CI on 13 October 2026. Broad synthetic
-checks and native packaging remain explicit manual checkpoints. Neither
-workflow runs on pushes, pull requests or tags, and local jobs accept only the
+checks and native packaging remain explicit manual checkpoints. None of the three
+workflows run on pushes, pull requests or tags, and local jobs accept only the
 owner repository on `main`. Runtime code and operator workflows are unchanged.
 
 `Synthetic tests` defaults to Linux x86_64 and macOS ARM64 with both Python 3.11
@@ -28,8 +28,11 @@ native GUI/codec fixtures, checks the offline launcher and builds/smokes the
 source zipapp. Python 3.11 retains the existing integration opt-in semantics;
 ordinary mocked/privacy/recovery and available Tk tests still run. Tests make
 fresh, exact temporary inputs and settings; no operator workspaces, filenames,
-media, checkpoints or reports are discovered. Tk roots stay withdrawn and
-native file pickers are forbidden in the generated workflow. The optional
+media, checkpoints or reports are discovered. The generated-media workflow keeps its Tk root withdrawn and forbids native
+file pickers. Layout/journey tests use only dedicated generated windows; their
+Mac suites share a synthetic-CI lock to prevent competing focus, and journey
+fixtures establish focus in their own window and restore original Tk scaling.
+The lock also covers native package self-tests across both repositories. The optional
 external schema-reference test retains its existing dependency skip.
 
 `Build release packages` also remains manual. Its default builds only the two
@@ -44,3 +47,9 @@ Dispatch the synthetic checkpoint on `main` with `include_hosted=false` for
 local proof. The resulting job labels, versions, full suite counts/skips and
 platform identities are the coverage evidence; a workflow definition alone is
 not a passed operating-system test. [Runner label semantics](https://docs.github.com/en/actions/how-tos/write-workflows/choose-where-workflows-run/choose-the-runner-for-a-job).
+
+`Native offline desktops` remains manual and defaults to the exact local Mac
+listener. Its Windows platform definition and full source/native/offline gates
+remain available only with `include_hosted=true`. Workflow routing edits do
+not execute desktop packaging or create a release. The synthetic checkpoint
+proves native source GUI/codec checks, not unexecuted bundled-package gates.

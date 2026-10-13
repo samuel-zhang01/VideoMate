@@ -20,6 +20,7 @@ class GuiJourneyTests(unittest.TestCase):
         self.addCleanup(self.temporary.cleanup)
         self.base = Path(self.temporary.name).resolve()
         self.root = create_root()
+        self.original_tk_scaling = self.root.tk.call("tk", "scaling")
         self.addCleanup(self.close_generated_window)
         with patch.object(Application, "check_tools"):
             self.app = Application(self.root, config_path=self.base / "settings.json", prepare_on_start=False)
@@ -28,6 +29,9 @@ class GuiJourneyTests(unittest.TestCase):
         self.app.workflow_changed()
         self.root.geometry("800x600")
         self.root.update()
+        # Focus assertions target this generated window, never the owner app.
+        self.root.focus_force()
+        self.root.update()
 
     def close_generated_window(self):
         self.app.cancel.set()
@@ -35,6 +39,7 @@ class GuiJourneyTests(unittest.TestCase):
             self.app.worker.join(timeout=5)
         for timer in self.root.tk.call("after", "info"):
             self.root.tk.call("after", "cancel", timer)
+        self.root.tk.call("tk", "scaling", self.original_tk_scaling)
         self.root.destroy()
 
     def finish_worker(self):

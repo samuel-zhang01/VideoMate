@@ -31,6 +31,8 @@ def matrix(kind, repository, include_hosted=False):
     slug = REPOS[repository]  # A fork cannot request the owner's local listener.
     rows = []
     for os_name, tag, arch, desktop, hosted in PLATFORMS:
+        if kind == 'desktop' and not desktop:
+            continue
         if hosted and not include_hosted:
             continue
         runners = [os_name] if hosted else [
@@ -110,17 +112,45 @@ def cleanup_runtime():
     shutil.rmtree(directory)
 
 
+def run_command(command):
+    if platform.system() == 'Darwin':
+        # All dedicated listeners of this UID share a desktop. This exact new
+        # fixture lock is global even when jobs have different TMPDIR values.
+        import fcntl
+        import stat
+        lock_path = Path('/tmp') / f'videomate-synthetic-ci-gui-{os.getuid()}.lock'
+        descriptor = os.open(lock_path, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+        with os.fdopen(descriptor, 'r+') as lock:
+            metadata = os.fstat(lock.fileno())
+            if not stat.S_ISREG(metadata.st_mode) or metadata.st_uid != os.getuid():
+                raise ValueError('Synthetic CI lock must be an owned regular file')
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            subprocess.run(command, check=True)
+    else:
+        subprocess.run(command, check=True)
+
+
+def run_tests():
+    command = [__import__('sys').executable, '-m', 'unittest', 'discover', '-s', 'tests', '-v']
+    if platform.system() == 'Linux':
+        command = ['xvfb-run', '-a', *command]
+    run_command(command)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='command', required=True)
     routing = commands.add_parser('matrix')
-    routing.add_argument('--kind', choices=('tests', 'release'), required=True)
+    routing.add_argument('--kind', choices=('tests', 'release', 'desktop'), required=True)
     routing.add_argument('--repo', choices=tuple(REPOS), required=True)
     routing.add_argument('--include-hosted', choices=('true', 'false'), default='false')
     runtime = commands.add_parser('runtime')
     runtime.add_argument('--python', choices=('3.11', '3.13'), required=True)
     runtime.add_argument('--parent', type=Path, default=os.environ.get('RUNNER_TEMP'))
     commands.add_parser('cleanup')
+    commands.add_parser('test')
+    execute = commands.add_parser('exec')
+    execute.add_argument('argv', nargs=argparse.REMAINDER)
     args = parser.parse_args()
     if args.command == 'matrix':
         print('matrix=' + json.dumps(matrix(args.kind, args.repo, args.include_hosted == 'true'), separators=(',', ':')))
@@ -128,6 +158,13 @@ def main():
         if args.parent is None or not args.parent.is_dir():
             raise ValueError('An existing disposable job parent is required')
         prepare_runtime(args.python, args.parent)
+    elif args.command == 'test':
+        run_tests()
+    elif args.command == 'exec':
+        command = args.argv[1:] if args.argv[:1] == ['--'] else args.argv
+        if not command:
+            raise ValueError('A synthetic checkpoint command is required')
+        run_command(command)
     else:
         cleanup_runtime()
 

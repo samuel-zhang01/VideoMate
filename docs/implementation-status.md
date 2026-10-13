@@ -1,6 +1,6 @@
 # Implementation status
 
-VideoMate **0.8.4 is development-preview source**. Public source preparation does not qualify a production release or update earlier binary packages. GitHub Actions remains disabled. Historical generated-fixture evidence is curated in [development validation](development/validation.md).
+VideoMate **0.8.4 is development-preview source**. Public source preparation does not qualify a production release or update earlier binary packages. The owner authorized dedicated local CI on 13 October 2026; broad/native and release workflows remain manual checkpoints. Historical generated-fixture evidence is curated in [development validation](development/validation.md).
 
 ## Implemented
 

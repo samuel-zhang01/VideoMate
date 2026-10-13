@@ -22,6 +22,7 @@ class GuiAuditTests(unittest.TestCase):
         self.addCleanup(self.temporary.cleanup)
         self.base = Path(self.temporary.name).resolve()
         self.root = create_root()
+        self.original_tk_scaling = self.root.tk.call("tk", "scaling")
         self.addCleanup(self.close_generated_window)
         if self._testMethodName == "test_each_settings_section_is_reachable_at_large_text_scale":
             self.root.tk.call("tk", "scaling", 2 * 96 / 72)
@@ -37,6 +38,7 @@ class GuiAuditTests(unittest.TestCase):
                 self.app.worker.join(timeout=5)
         for timer in self.root.tk.call("after", "info"):
             self.root.tk.call("after", "cancel", timer)
+        self.root.tk.call("tk", "scaling", self.original_tk_scaling)
         self.root.destroy()
 
     def selectors(self):

@@ -38,7 +38,8 @@ class MacSigningTests(unittest.TestCase):
         available = f'  1) {"A" * 40} "{identity}"\n     1 valid identities found\n'
         with patch.object(build_desktop.subprocess, "run", return_value=CompletedProcess([], 0, stdout=available)):
             build_desktop.check_mac_signing_identity(identity)
-        with patch.object(build_release, "check_mac_signing_identity", side_effect=ValueError("identity missing")), \
+        with patch.object(build_release, "platform_tag", return_value="macos-arm64"), \
+                patch.object(build_release, "check_mac_signing_identity", side_effect=ValueError("identity missing")), \
                 patch.object(build_release, "build_python") as build_python:
             with self.assertRaisesRegex(ValueError, "identity missing"):
                 build_release.build(Path("/synthetic/release"), mac_sign_identity=identity,

@@ -235,6 +235,7 @@ class GeometryTests(unittest.TestCase):
             base = Path(temporary).resolve()
             root = create_root()
             try:
+                original_tk_scaling = root.tk.call("tk", "scaling")
                 root.tk.call("tk", "scaling", 1.5 * 96 / 72)
                 with patch.object(Application, "check_tools"):
                     app = Application(root, config_path=base / "settings.json", prepare_on_start=False)
@@ -306,6 +307,7 @@ class GeometryTests(unittest.TestCase):
             finally:
                 for after in root.tk.call("after", "info"):
                     root.tk.call("after", "cancel", after)
+                root.tk.call("tk", "scaling", original_tk_scaling)
                 root.destroy()
 
     @unittest.skipUnless(os.environ.get("VIDEOMATE_TEST_GUI") == "1", "Native GUI testing not enabled")
@@ -446,6 +448,7 @@ class GeometryTests(unittest.TestCase):
         from videomate.preferences import load_preferences
         with tempfile.TemporaryDirectory(prefix="videomate-private-controls-generated-") as temporary:
             root = create_root()
+            original_tk_scaling = root.tk.call("tk", "scaling")
             config = Path(temporary).resolve() / "new-settings.json"
             try:
                 root.tk.call("tk", "scaling", 1.5 * 96 / 72)
@@ -484,6 +487,7 @@ class GeometryTests(unittest.TestCase):
             finally:
                 for after in root.tk.call("after", "info"):
                     root.tk.call("after", "cancel", after)
+                root.tk.call("tk", "scaling", original_tk_scaling)
                 root.destroy()
 
     @unittest.skipUnless(os.environ.get("VIDEOMATE_TEST_GUI") == "1", "Native GUI testing not enabled")
@@ -493,6 +497,7 @@ class GeometryTests(unittest.TestCase):
         from videomate.preferences import load_preferences
         with tempfile.TemporaryDirectory(prefix="videomate-diagnostic-ui-generated-") as temporary:
             root = create_root()
+            original_tk_scaling = root.tk.call("tk", "scaling")
             config = Path(temporary).resolve() / "new-settings.json"
             try:
                 root.tk.call("tk", "scaling", 1.5 * 96 / 72)
@@ -517,6 +522,7 @@ class GeometryTests(unittest.TestCase):
             finally:
                 for after in root.tk.call("after", "info"):
                     root.tk.call("after", "cancel", after)
+                root.tk.call("tk", "scaling", original_tk_scaling)
                 root.destroy()
 
     def test_small_screens_never_receive_an_oversized_minimum(self):
@@ -536,6 +542,7 @@ class GeometryTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="videomate-layout-") as temporary:
             for scale in (1, 1.5, 2):
                 root = create_root()
+                original_tk_scaling = root.tk.call("tk", "scaling")
                 root.tk.call("tk", "scaling", scale * 96 / 72)
                 errors = []
                 try:
@@ -574,4 +581,5 @@ class GeometryTests(unittest.TestCase):
                 finally:
                     for after in root.tk.call("after", "info"):
                         root.tk.call("after", "cancel", after)
+                    root.tk.call("tk", "scaling", original_tk_scaling)
                     root.destroy()

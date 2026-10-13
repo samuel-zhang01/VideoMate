@@ -77,18 +77,14 @@ jobs:
               for name in ('ffmpeg', 'ffprobe'):
                   output.write('VIDEOMATE_TEST_' + name.upper() + '=' + str(getattr(bundle, name)) + '\n')
               output.write('VIDEOMATE_TEST_GUI=1\n')
-      - name: Test with synthetic inputs only
-        if: runner.os != 'Linux'
-        run: python -m unittest discover -s tests -v
-      - name: Test Linux with synthetic inputs and virtual display
-        if: runner.os == 'Linux'
-        run: xvfb-run -a python -m unittest discover -s tests -v
+      - name: Test with full synthetic inputs and isolated native display
+        run: python tools/ci_support.py test
       - name: Check Windows offline launcher
         if: runner.os == 'Windows' && matrix.python == '3.13'
         run: .\start.bat --offline --check
       - name: Check Unix offline launcher
         if: runner.os != 'Windows' && matrix.python == '3.13'
-        run: sh start.sh --offline --check
+        run: python tools/ci_support.py exec -- sh start.sh --offline --check
       - name: Build offline development archive
         run: python tools/build_zipapp.py
       - name: Smoke test archive
